@@ -42,8 +42,7 @@ class ChatMessage(ndb.Model):
 	messagemedia = ndb.BlobProperty()
 	messagetime = ndb.DateTimeProperty()
 	votes = ndb.KeyProperty(kind='UserCollection')
-
-
+	
 # Chat class 
 
 ''' Note that a GroupChat object is simply a container for its members, followers, and individual messages

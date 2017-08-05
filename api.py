@@ -24,10 +24,7 @@ class GroupChatApi(remote.Service):
     # Create a group chat
 
     @endpoints.method(GroupChatForm, StatusMessage, path='createchat', http_method='POST', name='groupchat.create')
-    def create_chat(self, request):
-        return self.create_chat_trans(request)
-    
-    def create_chat_trans(self, request):  
+    def create_chat(self, request):  
         nametaken_key = ndb.Key(GroupChat, request.name)    # Test whether chat already exists
         if nametaken_key.get(): 
             return StatusMessage(successful = False, comments = 'Chat already exists')
@@ -67,9 +64,6 @@ class GroupChatApi(remote.Service):
 
     @endpoints.method(ChatMessageForm, StatusMessage, path='postchat',http_method='POST', name='chatmessage.post')
     def post_message(self, request):
-        return self.post_message_trans(request)
-
-    def post_message_trans(self, request):
         chat_key = ndb.Key(GroupChat, request.chatname)
         chat = chat_key.get()
         if not chat:
@@ -116,9 +110,6 @@ class GroupChatApi(remote.Service):
 
     @endpoints.method(ProfileForm, StatusMessage, path='createprofile', http_method='POST', name='profile.create')
     def create_profile(self, request):
-        return self.create_profile_trans(request)
-
-    def create_profile_trans(self, request):
     	test = ndb.Key(UserProfile, request.username)
     	if test.get():
             return StatusMessage(successful=False, comments='Profile already exists')
@@ -138,9 +129,6 @@ class GroupChatApi(remote.Service):
 
     @endpoints.method(ProfileForm, StatusMessage, path='update', http_method='POST', name='profile.update')
     def update_profile(self, request):
-        return self.update_profile_trans(request)
-
-    def update_profile_trans(self, request):
     	test = ndb.Key(UserProfile, request.username)
     	currentprof = test.get()
     	if not currentprof:
@@ -159,9 +147,6 @@ class GroupChatApi(remote.Service):
 
     @endpoints.method(ProfileForm, ProfileForm, path='return', http_method='GET', name='profile.return')
     def return_profile(self, request):
-        return self.return_profile_trans(request)
-
-    def return_profile_trans(self, request):
     	p_key = ndb.Key(UserProfile, request.username)
     	prof = p_key.get()
     	profile = ProfileForm(username=request.username)
