@@ -26,17 +26,15 @@ class ProfileForm(messages.Message):
 	displayname = messages.StringField(3)
 	blurb = messages.StringField(4)
 	avatar = messages.BytesField(5)
-	friends = messages.StringField(7, repeated=True)
 	chatsmember = messages.StringField(8, repeated=True)
 	chatsfollower = messages.StringField(9, repeated=True)
-	password = messages.StringField(10, required=True)
 
 
 # Message form corresponding to an individual chat message
 
 class ChatMessageForm(messages.Message):
 	sender = messages.StringField(1, required=True)
-	chatname = messages.StringField(2)
+	chatname = messages.StringField(2, required=True)
 	messagetext = messages.StringField(3)
 	messagemedia = messages.BytesField(4)
 

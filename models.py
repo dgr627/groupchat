@@ -28,7 +28,6 @@ class UserProfile(ndb.Model):
 	displayname = ndb.StringProperty()
 	blurb = ndb.StringProperty()
 	avatar = ndb.BlobProperty()
-	friends = ndb.KeyProperty(kind='UserProfile',repeated=True)
 	chatsmember = ndb.KeyProperty(kind='GroupChat', repeated=True)
 	chatsfollower = ndb.KeyProperty(kind='GroupChat', repeated=True)
 
@@ -42,7 +41,7 @@ class ChatMessage(ndb.Model):
 	messagemedia = ndb.BlobProperty()
 	messagetime = ndb.DateTimeProperty()
 	votes = ndb.KeyProperty(kind='UserCollection')
-	
+
 # Chat class 
 
 ''' Note that a GroupChat object is simply a container for its members, followers, and individual messages
@@ -53,5 +52,5 @@ class GroupChat(ndb.Model):
 	members = ndb.KeyProperty(kind='UserProfile', repeated=True)
 	followers = ndb.KeyProperty(kind='UserCollection')
 	messagelist = ndb.KeyProperty(kind = 'ChatMessage', repeated=True)
-	commentlist = ndb.KeyProperty(kind = 'Comment', repeated=True)
 	avatar = ndb.BlobProperty()
+

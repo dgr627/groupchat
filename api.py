@@ -122,7 +122,7 @@ class GroupChatApi(remote.Service):
     	if new_prof.put():
     		return StatusMessage(successful=True)
     	else: 
-    		return StatusMessage(successful=False)
+    		return StatusMessage(successful=False, comments='Google Datastore save error')
 
 
     # Update a profile
@@ -132,7 +132,7 @@ class GroupChatApi(remote.Service):
     	test = ndb.Key(UserProfile, request.username)
     	currentprof = test.get()
     	if not currentprof:
-    		return StatusMessage(successful=False)
+    		return StatusMessage(successful=False, comments='Profile nonexistent')
     	else:
     		for field in ('email','displayname','blurb','avatar'):
     			if hasattr(request, field):
@@ -141,7 +141,7 @@ class GroupChatApi(remote.Service):
     		if currentprof.put():
     			return StatusMessage(successful=True)
     		else: 
-    			return StatusMessage(successful=False)
+    			return StatusMessage(successful=False, comments='Google Datastore save error')
 
     # Return profile
 
