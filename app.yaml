@@ -1,0 +1,18 @@
+
+runtime: python27
+api_version: 1
+threadsafe: yes
+
+handlers:      
+
+- url: /_ah/spi/.*
+  script: api.api
+  secure: always
+
+libraries:
+
+- name: endpoints
+  version: latest
+
+- name: pycrypto
+  version: latest
