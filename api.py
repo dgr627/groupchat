@@ -33,11 +33,8 @@ class GroupChatApi(remote.Service):
         for x in range(0, len(request.members)):
             k = ndb.Key(UserProfile, request.members[x])
             member_keys.append(k)
-            future=k.get_async()    # Use an asynchronous operation for performance reasons
-            member_test.append(future)
-
-        for y in range(0, len(member_test)):
-            if member_test[y].get_result()== None:
+            future=k.get()
+            if not future:
                 return StatusMessage(successful = False, comments = 'Member does not exist')
  
         new_chat = GroupChat(name=request.name, members=member_keys, avatar=request.avatar)
@@ -48,7 +45,7 @@ class GroupChatApi(remote.Service):
             return StatusMessage(successful = False)
 
 
-    # Get the msg ids for a given chat
+    # Get the messages ids for a given chat
 
     @endpoints.method(MsgRetrieval, MsgRetrieval, path='return_msg_ids', http_method='GET', name='groupchat.return_msg_ids')
     def get_msg_ids(self, request):
