@@ -8,8 +8,9 @@
 # Imports
 
 from google.appengine.ext import ndb
-
+from pybcrypt import bcrypt
 from datetime import datetime
+import endpoints
 
 # User Collection class
 # This is used when storing user keys directly in an instance might result in a very 
@@ -30,12 +31,47 @@ class UserProfile(ndb.Model):
 	avatar = ndb.BlobProperty()
 	chatsmember = ndb.KeyProperty(kind='GroupChat', repeated=True)
 	chatsfollower = ndb.KeyProperty(kind='GroupChat', repeated=True)
+	credential =  ndb.KeyProperty(kind='Credential')
+
+
+# Credential object contains hashed user password, user API token, salt
+
+class Credential(ndb.Model):
+	hashed_password = ndb.StringProperty(indexed=False)
+	salt = ndb.StringProperty(indexed=False)
+	token = ndb.StringProperty(indexed=False)
+
+	def hash_password(self, inputstr):
+		s = bcrypt.gensalt()
+		h = bcrypt.hashpw(inputstr, s)
+		self.hashed_password = h
+		self.salt = s
+
+	def set_token(self):
+		self.token = bcrypt.gensalt()
+
+	def verify_password(self, inputstr):
+		if not inputstr:
+			return False
+		if not bcrypt.hashpw(inputstr, self.salt) == self.hashed_password:
+			return False
+		else: 
+			return True
+
+	def verify_token(self, inputstr):
+		if not inputstr:
+			return False
+		if not inputstr == self.token:
+			return False
+		else:
+			return True
 
 
 # Single Message class
 
 class ChatMessage(ndb.Model):
 	sender = ndb.KeyProperty(kind='UserProfile', required=True)
+	username = ndb.KeyProperty(kind='UserProfile', required=True)
 	chatname = ndb.KeyProperty(kind='GroupChat', required=True)
 	messagetext = ndb.StringProperty()
 	messagemedia = ndb.BlobProperty()
