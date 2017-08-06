@@ -70,7 +70,6 @@ class Credential(ndb.Model):
 # Single Message class
 
 class ChatMessage(ndb.Model):
-	sender = ndb.KeyProperty(kind='UserProfile', required=True)
 	username = ndb.KeyProperty(kind='UserProfile', required=True)
 	chatname = ndb.KeyProperty(kind='GroupChat', required=True)
 	messagetext = ndb.StringProperty()
