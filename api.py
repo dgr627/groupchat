@@ -145,10 +145,6 @@ class GroupChatApi(remote.Service):
     	if test.get():
             return StatusMessage(successful=False, comments='Profile already exists')
     	new_prof=UserProfile(id=request.username, username=request.username)
-    	for field in ('email','displayname','blurb','avatar'):
-    		if hasattr(request, field):
-    			val=getattr(request,field)
-    			setattr(new_prof, field, val)
         cred = Credential()
         cred.hash_password(request.password)
         cred.set_token()
@@ -197,7 +193,6 @@ class GroupChatApi(remote.Service):
     			val=getattr(prof, field)
     			setattr(profile, field, val)
     	return profile
-
 
 # Create API Server
 
