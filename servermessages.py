@@ -18,7 +18,6 @@ class LoginForm(messages.Message):
 	username = messages.StringField(1, required=True)
 	password = messages.StringField(2)
 	token = messages.StringField(3)
-	notes = messages.StringField(4) # Technical notes regarding the HTTP request
 
 # Message form corresponding to profile creation and update
 
@@ -32,8 +31,7 @@ class ProfileForm(messages.Message):
 	chatsfollower = messages.StringField(9, repeated=True)
 	password = messages.StringField(10)
 	token = messages.StringField(11)
-	notes = messages.StringField(12)
-	soughtprofile = messages.StringField(13)
+	soughtprofile = messages.StringField(12)
 
 
 # Message form corresponding to an individual chat message
@@ -44,7 +42,6 @@ class ChatMessageForm(messages.Message):
 	chatname = messages.StringField(3, required=True)
 	messagetext = messages.StringField(4)
 	messagemedia = messages.BytesField(5)
-	notes = messages.StringField(6) 
 
 
 # Get the message/comment IDs for a given chat
@@ -54,7 +51,7 @@ class MsgRetrieval(messages.Message):
 	username = messages.StringField(2, required=True)
 	chatname=messages.StringField(3, required=True)
 	msg_ids=messages.IntegerField(4, repeated=True)
-	notes = messages.StringField(5)
+
 
 # Get a single chat by ID
 
@@ -62,7 +59,7 @@ class ChatIdForm(messages.Message):
 	token = messages.StringField(1)
 	username = messages.StringField(2, required=True)
 	msgid = messages.IntegerField(3, required=True)
-	notes = messages.StringField(4)
+
 
 
 # Message form corresponding to chat room creation/update/retrieval
