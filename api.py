@@ -13,7 +13,6 @@ from tools import authenticate
 
 import datetime
 
-    
 # Define API
 
 @endpoints.api(name='groupchat', version='v1')

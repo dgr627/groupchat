@@ -9,12 +9,13 @@ handlers:
   script: api.api
   secure: always
 
-libraries:
 
+libraries:
 - name: endpoints
   version: latest
-
 - name: pycrypto
   version: latest
 
-entrypoint: python api.py
+
+
+
