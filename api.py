@@ -3,8 +3,7 @@
 
 import endpoints
 from protorpc import messages
-from protorpc import message_types
-from protorpc import remote
+from protorpc import *
 
 from google.appengine.ext import ndb
 
@@ -28,10 +27,9 @@ class GroupChatApi(remote.Service):
 
     @endpoints.method(LoginForm, LoginForm, path='login', http_method='POST', name='groupchat.login')
     def login(self, request):
+        authenticate.user_exists(request.username)
         userkey=ndb.Key(UserProfile, request.username)
         user=userkey.get()
-        if not user:
-            raise endpoints.BadRequestException("No such user.")
         usercred=user.credential.get()
         if usercred.verify_password(request.password):
             output=LoginForm(username=request.username, token=usercred.token)
@@ -43,13 +41,10 @@ class GroupChatApi(remote.Service):
 
     @endpoints.method(ProfileForm, LoginForm, path='createprofile', http_method='POST', name='profile.create')
     def create_profile(self, request):
-    	test = ndb.Key(UserProfile, request.username)
-    	if test.get():
-            raise endpoints.BadRequestException("Username not available.")
+        authenticate.username_taken(request.username)
+        authenticate.valid_password(request.password)
     	new_prof=UserProfile(id=request.username, username=request.username)
         cred = Credential()
-        if not len(request.password)>5:
-            raise endpoints.UnauthorizedException('Password too short.')
         cred.hash_password(request.password)
         cred.set_token()
         cred.put()
@@ -79,10 +74,7 @@ class GroupChatApi(remote.Service):
 
     @endpoints.method(ProfileForm, ProfileForm, path='return', http_method='GET', name='profile.return')
     def return_profile(self, request):
-    	userkey=ndb.Key(UserProfile, request.username)
-        usercred=userkey.get().credential.get()
-        if not usercred.verify_token(request.token):
-            raise endpoints.UnauthorizedException("Not logged in.")
+        authenticate.authenticate_login(username=request.username, token=request.token)
         prof_key=ndb.Key(UserProfile, request.soughtprofile)
         prof = prof_key.get()
     	profile = ProfileForm(username=request.soughtprofile)
@@ -98,9 +90,7 @@ class GroupChatApi(remote.Service):
     @endpoints.method(GroupChatForm, StatusMessage, path='createchat', http_method='POST', name='groupchat.create')
     def create_chat(self, request):  
         authenticate.authenticate_login(username=request.username, token=request.token)
-        nametaken_key = ndb.Key(GroupChat, request.name)    # Test whether chat already exists
-        if nametaken_key.get(): 
-            raise endpoints.BadRequestException("Chat already exists.")
+        authenticate.chat_taken(request.name)
         member_keys=[]
         member_test=[]
         for x in range(0, len(request.members)):
@@ -135,10 +125,9 @@ class GroupChatApi(remote.Service):
     @endpoints.method(ChatMessageForm, StatusMessage, path='postchat',http_method='POST', name='chatmessage.post')
     def post_message(self, request):
         authenticate.authenticate_login(username=request.username, token=request.token)
+        authenticate.chat_exists(request.chatname)
         chat_key = ndb.Key(GroupChat, request.chatname)
         chat = chat_key.get()
-        if not chat:
-            raise endpoints.BadRequestException("Chat does not exist.")
         msg = ChatMessage(username=ndb.Key(UserProfile, request.username), chatname=chat_key, messagetext=request.messagetext, messagemedia=request.messagemedia, messagetime=datetime.datetime.now())
         if msg.put():
             msg_key = msg.key

@@ -16,3 +16,5 @@ libraries:
 
 - name: pycrypto
   version: latest
+
+entrypoint: python api.py
