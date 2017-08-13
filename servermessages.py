@@ -5,6 +5,7 @@
 # Import protorpc messages
 
 from protorpc import messages
+from protorpc import message_types
 
 # Generic Boolean Status Message
 
@@ -42,15 +43,19 @@ class ChatMessageForm(messages.Message):
 	chatname = messages.StringField(3, required=True)
 	messagetext = messages.StringField(4)
 	messagemedia = messages.BytesField(5)
+	messagetime = message_types.DateTimeField(6)
+	messageid = messages.IntegerField(7)
+	votes = messages.IntegerField(8)
 
 
-# Get the message/comment IDs for a given chat
+# Get the messages or IDs for a chat
 
 class MsgRetrieval(messages.Message):
 	token = messages.StringField(1)
 	username = messages.StringField(2, required=True)
 	chatname=messages.StringField(3, required=True)
 	msg_ids=messages.IntegerField(4, repeated=True)
+	messages=messages.MessageField(ChatMessageForm, 5, repeated=True)
 
 
 # Get a single chat by ID

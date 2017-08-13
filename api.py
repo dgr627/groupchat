@@ -2,10 +2,10 @@
 # Import model and message form classes; import cloud platform modules
 
 import endpoints
-from protorpc import messages
 from protorpc import *
 
 from google.appengine.ext import ndb
+from google.appengine.api import images
 
 from models import *
 from servermessages import *
@@ -38,7 +38,7 @@ class GroupChatApi(remote.Service):
 
     # Create a profile
 
-    @endpoints.method(ProfileForm, LoginForm, path='createprofile', http_method='POST', name='profile.create')
+    @endpoints.method(LoginForm, LoginForm, path='createprofile', http_method='POST', name='profile.create')
     def create_profile(self, request):
         authenticate.username_taken(request.username)
         authenticate.valid_password(request.password)
@@ -60,10 +60,13 @@ class GroupChatApi(remote.Service):
     def update_profile(self, request):
         authenticate.authenticate_login(username=request.username, token=request.token)
         currentprof = ndb.Key(UserProfile, request.username).get()
-    	for field in ('email','displayname','blurb','avatar'):
-    		if hasattr(request, field):
-    			val=getattr(request,field)
-    			setattr(currentprof, field, val)
+    	for field in ('email','displayname','blurb'):
+            val=getattr(request,field)
+            setattr(currentprof, field, val)
+        print hasattr(request, 'avatar')
+        if request.avatar:
+            avatar=images.resize(request.avatar,32,32)
+            currentprof.avatar=avatar
     	if currentprof.put():
     		return StatusMessage(successful=True)
     	else: 
@@ -118,6 +121,24 @@ class GroupChatApi(remote.Service):
         response = MsgRetrieval(chatname=request.chatname, msg_ids=ids, username=request.username)
         return response
 
+    # Get the messages for a given chat
+
+    @endpoints.method(MsgRetrieval, MsgRetrieval, path='return_msgs', http_method='GET', name='groupchat.return_msgs')
+    def return_msgs(self, request):
+        authenticate.authenticate_login(username=request.username, token=request.token)
+        chat = ndb.Key(GroupChat, request.chatname).get()
+        msgs = []
+        for count in range(0, len(chat.messagelist)):
+            msg_key=chat.messagelist[count]
+            msg = chat.messagelist[count].get()
+            if not msg.votes:
+                likes = 0
+            else:
+                likes = msg.votes.get().user_count
+            msgform = ChatMessageForm(username=msg.username.id(), chatname=msg.chatname.id(), messagetext=msg.messagetext, messagemedia=msg.messagemedia, messagetime=msg.messagetime, messageid=msg_key.id(), votes=likes)
+            msgs.append(msgform)
+        response = MsgRetrieval(chatname=request.chatname,username=request.username, messages=msgs)
+        return response
 
     # Post a message
 
