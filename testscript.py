@@ -3,20 +3,43 @@
 
 import ast
 import requests
-#payload={'username':'bananas244', 'token':'$2a$01$rXhizzYGa377KftoGWC7q.','blurb':'testblurb'}
-#r = requests.post('https://groupchatdev1.appspot.com/_ah/api/groupchat/v1/update', params=payload)
-#x=r.json()
-#print x["successful"]
-
-#for i in range(1,20):
-#	payload2={'username':'bananas244', 'token':'$2a$01$rXhizzYGa377KftoGWC7q.','chatname':'testchat', 'messagetext':'%s' %i}
-#	r=requests.post('https://groupchatdev1.appspot.com/_ah/api/groupchat/v1/postchat', params=payload2)
-#	x=r.json()
-#	print x["successful"]
 
 
-payload3={'username':'bananas244', 'token':'$2a$01$rXhizzYGa377KftoGWC7q.','chatname':'testchat'}
-r = requests.get('https://groupchatdev1.appspot.com/_ah/api/groupchat/v1/return_msgs', params=payload3)
-x=r.json()
-print x
+username='deepak18'
+password='deepak'
+chatname='testtest2'
+messagetext='dogs'
+
+def create_profile(username, password):
+	payload={'username': '%s' %username, 'password':'%s' %password}
+	r = requests.post('https://groupchatdev1.appspot.com/_ah/api/groupchat/v1/createprofile', params=payload)
+	x=r.json()
+	print x["token"]
+	token=x["token"]
+	return token
+z=create_profile(username, password)
+
+def create_groupchat(username, token, chatname):
+	payload={'username':'%s' %username, 'token':'%s' %token, 'name':'%s' %chatname}
+	r = requests.post('https://groupchatdev1.appspot.com/_ah/api/groupchat/v1/createchat', params=payload)
+	x = r.json()
+	print x["successful"]
+
+create_groupchat(username, z, chatname)
+
+def post_message(username, token, chatname, messagetext):
+	payload={'username':'%s' %username, 'token':'%s' %token, 'chatname':'%s' %chatname, 'messagetext':'%s' %messagetext}
+	r = requests.post('https://groupchatdev1.appspot.com/_ah/api/groupchat/v1/postchat', params=payload)
+	x = r.json()
+	print x["successful"]
+
+post_message(username, z, chatname, messagetext)
+
+def display_messages(username, token, chatname):
+	payload3={'username':'%s' %username, 'token': '%s' %token,'chatname':'%s' %chatname}
+	r = requests.get('https://groupchatdev1.appspot.com/_ah/api/groupchat/v1/return_msgs', params=payload3)
+	x=r.json()
+	print x
+
+display_messages(username, z, chatname)
 	
