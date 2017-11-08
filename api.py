@@ -62,7 +62,8 @@ class GroupChatApi(remote.Service):
         currentprof = ndb.Key(UserProfile, request.username).get()
     	for field in ('email','displayname','blurb'):
             val=getattr(request,field)
-            setattr(currentprof, field, val)
+            if val:
+                setattr(currentprof, field, val)
         print hasattr(request, 'avatar')
         if request.avatar:
             avatar=images.resize(request.avatar,32,32)
