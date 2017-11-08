@@ -50,6 +50,16 @@ class ChatMessageForm(messages.Message):
     votes = messages.IntegerField(8)
 
 
+# Message form for chat info
+
+class ChatInfoForm(messages.Message):
+    token = messages.StringField(1)
+    username = messages.StringField(2, required=True)
+    chatname = messages.StringField(3, required=True)
+    blurb =  messages.StringField(4)
+    avatar = messages.BytesField(5)
+
+
 # Get the messages or IDs for a chat
 
 class MsgRetrieval(messages.Message):

@@ -122,6 +122,7 @@ class GroupChatApi(remote.Service):
         authenticate.authenticate_login(username=request.username, token=request.token)
         authenticate.chat_taken(request.name)
         member_keys = []
+        member_keys.append(ndb.Key(UserProfile, request.username))
         for x in range(0, len(request.members)):
             k = ndb.Key(UserProfile, request.members[x])
             member_keys.append(k)
@@ -182,6 +183,10 @@ class GroupChatApi(remote.Service):
             msgs.append(msgform)
         response = MsgRetrieval(chatname=request.chatname, username=request.username, messages=msgs)
         return response
+
+    #def return_chat_info(self, request):
+    #   authenticate.authenticate_login(username=request.username, token=request.token)
+    #   chat = ndb.Key(GroupChat, request.chatname).get()
 
     # Post a message
     @endpoints.method(

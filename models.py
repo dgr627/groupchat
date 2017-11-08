@@ -91,3 +91,4 @@ class GroupChat(ndb.Model):
     followers = ndb.KeyProperty(kind='UserCollection')
     messagelist = ndb.KeyProperty(kind='ChatMessage', repeated=True)
     avatar = ndb.BlobProperty()
+    blurb = ndb.StringProperty()
