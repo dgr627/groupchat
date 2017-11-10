@@ -2,6 +2,7 @@
 
 import endpoints
 from protorpc import *
+import user_factory
 
 from google.appengine.ext import ndb
 from google.appengine.api import images
@@ -35,15 +36,8 @@ class GroupChatApi(remote.Service):
         name='groupchat.login'
     )
     def login(self, request):
-        authenticate.user_exists(request.username)
-        userkey = ndb.Key(UserProfile, request.username)
-        user = userkey.get()
-        usercred = user.credential.get()
-        if usercred.verify_password(request.password):
-            output = LoginForm(username=request.username, token=usercred.token)
-            return output
-        else:
-            raise endpoints.UnauthorizedException("Incorrect password.")
+        user = authenticate.authenticate(request.username, request.password)
+        return user.to_private_output()
 
     # Create a profile
     @endpoints.method(
@@ -54,40 +48,36 @@ class GroupChatApi(remote.Service):
         name='profile.create'
     )
     def create_profile(self, request):
-        authenticate.username_taken(request.username)
-        authenticate.valid_password(request.password)
-        new_prof = UserProfile(id=request.username, username=request.username)
-        cred = Credential()
-        cred.hash_password(request.password)
-        cred.set_token()
-        cred.put()
-        new_prof.credential = cred.key
-        if new_prof.put():
-            return LoginForm(username=request.username, token=cred.token)
-        else:
-            raise endpoints.BadRequestException("Google Datastore save error.")
+        username = request.username
+        password = request.password
+
+        authenticate.validate_username(username)
+        authenticate.validate_password(password)
+
+        user = user_factory.create_new_user(username, password)
+        return user.to_private_output()
 
     # Update a profile
     @endpoints.method(
         ProfileForm,
-        StatusMessage,
+        ProfileForm,
         path='update',
         http_method='POST',
         name='profile.update'
     )
     def update_profile(self, request):
-        authenticate.authenticate_login(username=request.username, token=request.token)
-        currentprof = ndb.Key(UserProfile, request.username).get()
+        user = authenticate.authenticate_login(request.userid, request.token)
         for field in ('email', 'displayname', 'blurb'):
             val = getattr(request, field)
             if val:
-                setattr(currentprof, field, val)
-        print hasattr(request, 'avatar')
+                setattr(user, field, val)
+
         if request.avatar:
             avatar = images.resize(request.avatar, 32, 32)
-            currentprof.avatar = avatar
-        if currentprof.put():
-            return StatusMessage(successful=True)
+            user.avatar = avatar
+
+        if user.put():
+            return user.to_public_output()
         else:
             raise endpoints.BadRequestException("Google Datastore save error.")
 
@@ -100,39 +90,33 @@ class GroupChatApi(remote.Service):
         name='profile.return'
     )
     def return_profile(self, request):
-        authenticate.authenticate_login(username=request.username, token=request.token)
-        prof_key = ndb.Key(UserProfile, request.soughtprofile)
-        prof = prof_key.get()
-        profile = ProfileForm(username=request.soughtprofile)
-        for field in ('email', 'displayname', 'blurb', 'avatar', 'friends', 'chatsmember', 'chatsfollowing'):
-            if hasattr(prof, field):
-                val = getattr(prof, field)
-                setattr(profile, field, val)
-        return profile
+        user = authenticate.authenticate_login(request.userid, request.token)
+        return user.to_public_output()
 
     # Create a group chat
     @endpoints.method(
         GroupChatForm,
-        StatusMessage,
+        GroupChatInfoForm,
         path='createchat',
         http_method='POST',
         name='groupchat.create'
     )
     def create_chat(self, request):
-        authenticate.authenticate_login(username=request.username, token=request.token)
+        user = authenticate.authenticate_login(request.userid, request.token)
         authenticate.chat_taken(request.name)
-        member_keys = []
-        member_keys.append(ndb.Key(UserProfile, request.username))
+        member_keys = [user.userid]
+
         for x in range(0, len(request.members)):
-            k = ndb.Key(UserProfile, request.members[x])
-            member_keys.append(k)
-            future = k.get()
+            future = ndb.Key(UserProfile, x).get()
             if not future:
                 raise endpoints.BadRequestException("User does not exist.")
+            else:
+                member_keys.append(x)
+
         new_chat = GroupChat(name=request.name, members=member_keys, avatar=request.avatar)
         new_chat.key = ndb.Key(GroupChat, request.name)
         if new_chat.put():
-            return StatusMessage(successful=True, comments='Chat created.')
+            return new_chat.to_private_output()
         else:
             raise endpoints.BadRequestException("Google Datastore save error.")
 
@@ -158,16 +142,17 @@ class GroupChatApi(remote.Service):
         MsgRetrieval,
         MsgRetrieval,
         path='return_msgs',
-        http_method='GET',
+        http_method='POST',
         name='groupchat.return_msgs'
     )
     def return_msgs(self, request):
-        authenticate.authenticate_login(username=request.username, token=request.token)
-        chat = ndb.Key(GroupChat, request.chatname).get()
+        user = authenticate.authenticate_login(request.userid, request.token)
+        chat = authenticate.authenticate_chat(request.chatname, user.userid)
         msgs = []
         for count in range(0, len(chat.messagelist)):
             msg_key = chat.messagelist[count]
-            msg = chat.messagelist[count].get()
+            print('CHAT', msg_key)
+            msg = msg_key.get()
             if not msg.votes:
                 likes = 0
             else:
@@ -184,34 +169,34 @@ class GroupChatApi(remote.Service):
         response = MsgRetrieval(chatname=request.chatname, username=request.username, messages=msgs)
         return response
 
-    #def return_chat_info(self, request):
+    # def return_chat_info(self, request):
     #   authenticate.authenticate_login(username=request.username, token=request.token)
     #   chat = ndb.Key(GroupChat, request.chatname).get()
 
     # Post a message
     @endpoints.method(
         ChatMessageForm,
-        StatusMessage,
+        ChatMessageForm,
         path='postchat',
         http_method='POST',
         name='chatmessage.post'
     )
     def post_message(self, request):
-        authenticate.authenticate_login(username=request.username, token=request.token)
-        authenticate.chat_exists(request.chatname)
-        chat_key = ndb.Key(GroupChat, request.chatname)
-        chat = chat_key.get()
+        user = authenticate.authenticate_login(request.userid, request.token)
+        chat = authenticate.authenticate_chat(request.chatname, user.userid)
+
         msg = ChatMessage(
-            username=ndb.Key(UserProfile, request.username),
-            chatname=chat_key,
+            userid=user.userid,
+            chatname=chat.name,
             messagetext=request.messagetext,
             messagemedia=request.messagemedia,
             messagetime=datetime.datetime.now())
+
         if msg.put():
             msg_key = msg.key
             chat.messagelist.append(msg_key)
             if chat.put():
-                return StatusMessage(successful=True, comments="Message posted")
+                return msg.to_public_output()
             else:
                 raise endpoints.BadRequestException("Google Datastore save error.")
         else:

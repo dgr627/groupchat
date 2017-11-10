@@ -8,9 +8,7 @@
 
 from google.appengine.ext import ndb
 from pybcrypt import bcrypt
-from datetime import datetime
-import endpoints
-
+from servermessages import *
 
 # User Collection class
 # This is used when storing user keys directly in an instance might result in a very 
@@ -25,7 +23,8 @@ class UserCollection(ndb.Model):
 # User Profile class
 
 class UserProfile(ndb.Model):
-    username = ndb.StringProperty(required=True)
+    userid = ndb.StringProperty(required=True)
+    username = ndb.StringProperty()
     email = ndb.StringProperty()
     displayname = ndb.StringProperty()
     blurb = ndb.StringProperty()
@@ -34,6 +33,30 @@ class UserProfile(ndb.Model):
     chatsfollower = ndb.KeyProperty(kind='GroupChat', repeated=True)
     credential = ndb.KeyProperty(kind='Credential')
 
+    def to_list_output(self):
+        return ProfileForm(
+            displayname = self.displayname,
+            userid = self.userid,
+            avatar = self.avatar
+        )
+
+    def to_private_output(self):
+        return LoginForm(
+            username=self.username,
+            token=self.credential.get().token,
+            userid=self.userid
+        )
+
+    def to_public_output(self):
+        return ProfileForm(
+            displayname = self.displayname,
+            userid = self.userid,
+            avatar = self.avatar,
+            blurb =
+            self.blurb,
+            chatsmember = self.chatsmember,
+            chatsfollower = self.chatsfollower,
+        )
 
 # Credential object contains hashed user password, user API token, salt
 
@@ -71,12 +94,22 @@ class Credential(ndb.Model):
 # Single Message class
 
 class ChatMessage(ndb.Model):
-    username = ndb.KeyProperty(kind='UserProfile', required=True)
-    chatname = ndb.KeyProperty(kind='GroupChat', required=True)
+    userid = ndb.StringProperty(required=True)
+    chatname = ndb.StringProperty(required=True)
     messagetext = ndb.StringProperty()
     messagemedia = ndb.BlobProperty()
     messagetime = ndb.DateTimeProperty()
     votes = ndb.KeyProperty(kind='UserCollection')
+
+    def to_public_output(self):
+        return ChatMessageForm(
+            userid = self.userid,
+            chatname = self.chatname,
+            messagetext = self.messagetext,
+            messagemedia = self.messagemedia,
+            messagetime = self.messagetime,
+            votes = self.votes
+        )
 
 
 # Chat class
@@ -87,8 +120,15 @@ class ChatMessage(ndb.Model):
 
 class GroupChat(ndb.Model):
     name = ndb.StringProperty(required=True)
-    members = ndb.KeyProperty(kind='UserProfile', repeated=True)
+    members = ndb.StringProperty(repeated=True)
     followers = ndb.KeyProperty(kind='UserCollection')
     messagelist = ndb.KeyProperty(kind='ChatMessage', repeated=True)
     avatar = ndb.BlobProperty()
     blurb = ndb.StringProperty()
+
+    def to_private_output(self):
+        return GroupChatInfoForm(
+            name = self.name,
+            members = map(lambda x: UserProfile.get_by_id(x).to_list_output(), self.members),
+            messagelist = self.messagelist
+        )
