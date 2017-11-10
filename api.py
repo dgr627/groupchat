@@ -158,8 +158,8 @@ class GroupChatApi(remote.Service):
             else:
                 likes = msg.votes.get().user_count
             msgform = ChatMessageForm(
-                username=msg.username.id(),
-                chatname=msg.chatname.id(),
+                userid=msg.userid,
+                chatname=msg.chatname,
                 messagetext=msg.messagetext,
                 messagemedia=msg.messagemedia,
                 messagetime=msg.messagetime,

@@ -84,7 +84,7 @@ class ChatIdForm(messages.Message):
 
 class GroupChatForm(messages.Message):
     token = messages.StringField(1, required=True)
-    username = messages.StringField(2, required=True)
+    username = messages.StringField(2)
     name = messages.StringField(3, required=True)
     members = messages.StringField(4, repeated=True)
     followers = messages.StringField(5, repeated=True)
