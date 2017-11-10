@@ -20,12 +20,13 @@ class LoginForm(messages.Message):
     username = messages.StringField(1, required=True)
     password = messages.StringField(2)
     token = messages.StringField(3)
+    userid = messages.StringField(4)
 
 
 # Message form corresponding to profile creation and update
 
 class ProfileForm(messages.Message):
-    username = messages.StringField(1, required=True)
+    userid = messages.StringField(1, required=True)
     email = messages.StringField(2)
     displayname = messages.StringField(3)
     blurb = messages.StringField(4)
@@ -35,13 +36,14 @@ class ProfileForm(messages.Message):
     password = messages.StringField(10)
     token = messages.StringField(11)
     soughtprofile = messages.StringField(12)
+    username = messages.StringField(13)
 
 
 # Message form corresponding to an individual chat message
 
 class ChatMessageForm(messages.Message):
     token = messages.StringField(1)
-    username = messages.StringField(2, required=True)
+    userid = messages.StringField(2, required=True)
     chatname = messages.StringField(3, required=True)
     messagetext = messages.StringField(4)
     messagemedia = messages.BytesField(5)
@@ -64,11 +66,11 @@ class ChatInfoForm(messages.Message):
 
 class MsgRetrieval(messages.Message):
     token = messages.StringField(1)
-    username = messages.StringField(2, required=True)
-    chatname = messages.StringField(3, required=True)
-    msg_ids = messages.IntegerField(4, repeated=True)
-    messages = messages.MessageField(ChatMessageForm, 5, repeated=True)
-
+    userid = messages.StringField(2)
+    username = messages.StringField(3)
+    chatname = messages.StringField(4, required=True)
+    msg_ids = messages.IntegerField(5, repeated=True)
+    messages = messages.MessageField(ChatMessageForm, 6, repeated=True)
 
 # Get a single chat by ID
 
@@ -88,3 +90,14 @@ class GroupChatForm(messages.Message):
     followers = messages.StringField(5, repeated=True)
     messagelist = messages.StringField(6, repeated=True)
     avatar = messages.BytesField(7)
+    userkey = messages.StringField(8)
+    userid = messages.StringField(9, required=True)
+
+
+class GroupChatInfoForm(messages.Message):
+    name = messages.StringField(1, required=True)
+    members = messages.MessageField(ProfileForm, 2, repeated=True)
+    followers = messages.StringField(3, repeated=True)
+    messagelist = messages.MessageField(ChatMessageForm, 4, repeated=True)
+    avatar = messages.BytesField(5)
+    userkey = messages.StringField(6)
