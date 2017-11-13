@@ -64,7 +64,7 @@ class ChatInfoForm(messages.Message):
 
 # Get the messages or IDs for a chat
 
-class MsgRetrieval(messages.Message):
+class MsgRetrievalForm(messages.Message):
     token = messages.StringField(1)
     userid = messages.StringField(2)
     username = messages.StringField(3)

@@ -33,6 +33,15 @@ class UserProfile(ndb.Model):
     chatsfollower = ndb.KeyProperty(kind='GroupChat', repeated=True)
     credential = ndb.KeyProperty(kind='Credential')
 
+    def change_password(self, new_password):
+        self.credential.delete()
+        cred = Credential()
+        cred.hash_password(new_password)
+        cred.put()
+        self.credential = cred.key
+        self.put()
+        return self.to_private_output()
+
     def to_list_output(self):
         return ProfileForm(
             displayname = self.displayname,
@@ -70,9 +79,8 @@ class Credential(ndb.Model):
         h = bcrypt.hashpw(inputstr, s)
         self.hashed_password = h
         self.salt = s
-
-    def set_token(self):
         self.token = bcrypt.gensalt()
+        
 
     def verify_password(self, inputstr):
         if not inputstr:
@@ -108,7 +116,8 @@ class ChatMessage(ndb.Model):
             messagetext = self.messagetext,
             messagemedia = self.messagemedia,
             messagetime = self.messagetime,
-            votes = self.votes
+            messageid = self.key.id(),
+            votes = (self.votes.get().user_count if self.votes else 0)
         )
 
 
@@ -120,7 +129,7 @@ class ChatMessage(ndb.Model):
 
 class GroupChat(ndb.Model):
     name = ndb.StringProperty(required=True)
-    members = ndb.StringProperty(repeated=True)
+    members = ndb.KeyProperty(kind='UserProfile', repeated=True)
     followers = ndb.KeyProperty(kind='UserCollection')
     messagelist = ndb.KeyProperty(kind='ChatMessage', repeated=True)
     avatar = ndb.BlobProperty()
@@ -129,6 +138,8 @@ class GroupChat(ndb.Model):
     def to_private_output(self):
         return GroupChatInfoForm(
             name = self.name,
-            members = map(lambda x: UserProfile.get_by_id(x).to_list_output(), self.members),
+            members = map(lambda x: UserProfile.get_by_id(x.id()).to_list_output(), self.members),
             messagelist = self.messagelist
         )
+
+

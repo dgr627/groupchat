@@ -21,6 +21,13 @@ def authenticate(username, password):
             raise endpoints.UnauthorizedException("Incorrect password.")
     raise endpoints.UnauthorizedException("User not found.")
 
+def authenticate_chat(chatname, userid):
+    chat_key = ndb.Key(GroupChat, chatname)
+    chat = chat_key.get()
+
+    if not chat:
+        raise endpoints.BadRequestException("Chat does not exist.")
+    return chat
 
 def validate_username(username):
     count = UserProfile.query(UserProfile.username == username).count()
@@ -53,13 +60,3 @@ def chat_exists(chatname):
     if not chat_key.get():
         raise endpoints.BadRequestException("Chat does not exist.")
 
-def authenticate_chat(chatname, userid):
-    chat_key = ndb.Key(GroupChat, chatname)
-    chat = chat_key.get()
-
-    if not chat:
-        raise endpoints.BadRequestException("Chat does not exist.")
-
-    if any(x for x in chat.members if x == userid):
-        return chat
-    endpoints.UnauthorizedException("Not authorized to view.")

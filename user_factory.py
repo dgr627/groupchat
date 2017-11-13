@@ -10,7 +10,6 @@ def create_new_user(username, password):
         new_prof = UserProfile(id=userid, username=username, userid=userid)
         cred = Credential()
         cred.hash_password(password)
-        cred.set_token()
         cred.put()
         new_prof.credential = cred.key
         new_prof.put()

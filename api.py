@@ -104,11 +104,11 @@ class GroupChatApi(remote.Service):
     def create_chat(self, request):
         user = authenticate.authenticate_login(request.userid, request.token)
         authenticate.chat_taken(request.name)
-        member_keys = [user.userid]
+        member_keys = [user.key]
 
         for x in range(0, len(request.members)):
-            future = ndb.Key(UserProfile, x).get()
-            if not future:
+            future.key = ndb.Key(UserProfile, x)
+            if not future.get():
                 raise endpoints.BadRequestException("User does not exist.")
             else:
                 member_keys.append(x)
@@ -120,27 +120,12 @@ class GroupChatApi(remote.Service):
         else:
             raise endpoints.BadRequestException("Google Datastore save error.")
 
-    # Get the messages ids for a given chat
-    @endpoints.method(
-        MsgRetrieval,
-        MsgRetrieval,
-        path='return_msg_ids',
-        http_method='GET',
-        name='groupchat.return_msg_ids'
-    )
-    def get_msg_ids(self, request):
-        authenticate.authenticate_login(username=request.username, token=request.token)
-        chat = ndb.Key(GroupChat, request.chatname).get()
-        ids = []
-        for count in range(0, len(chat.messagelist)):
-            ids.append(chat.messagelist[count].id())
-        response = MsgRetrieval(chatname=request.chatname, msg_ids=ids, username=request.username)
-        return response
+
 
     # Get the messages for a given chat
     @endpoints.method(
-        MsgRetrieval,
-        MsgRetrieval,
+        MsgRetrievalForm,
+        MsgRetrievalForm,
         path='return_msgs',
         http_method='POST',
         name='groupchat.return_msgs'
@@ -151,22 +136,9 @@ class GroupChatApi(remote.Service):
         msgs = []
         for count in range(0, len(chat.messagelist)):
             msg_key = chat.messagelist[count]
-            print('CHAT', msg_key)
             msg = msg_key.get()
-            if not msg.votes:
-                likes = 0
-            else:
-                likes = msg.votes.get().user_count
-            msgform = ChatMessageForm(
-                userid=msg.userid,
-                chatname=msg.chatname,
-                messagetext=msg.messagetext,
-                messagemedia=msg.messagemedia,
-                messagetime=msg.messagetime,
-                messageid=msg_key.id(), votes=likes
-            )
-            msgs.append(msgform)
-        response = MsgRetrieval(chatname=request.chatname, username=request.username, messages=msgs)
+            msgs.append(msg.to_public_output())
+        response = MsgRetrievalForm(chatname=request.chatname, username=request.username, messages=msgs)
         return response
 
     # def return_chat_info(self, request):
