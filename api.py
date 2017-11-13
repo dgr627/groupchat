@@ -86,12 +86,12 @@ class GroupChatApi(remote.Service):
         ProfileForm,
         ProfileForm,
         path='return',
-        http_method='GET',
+        http_method='POST',
         name='profile.return'
     )
     def return_profile(self, request):
         user = authenticate.authenticate_login(request.userid, request.token)
-        return user.to_public_output()
+        return user.to_public_output() 
 
     # Create a group chat
     @endpoints.method(
@@ -116,6 +116,8 @@ class GroupChatApi(remote.Service):
         new_chat = GroupChat(name=request.name, members=member_keys, avatar=request.avatar)
         new_chat.key = ndb.Key(GroupChat, request.name)
         if new_chat.put():
+            user.chatsmember.append(new_chat.key)
+            user.put()
             return new_chat.to_private_output()
         else:
             raise endpoints.BadRequestException("Google Datastore save error.")

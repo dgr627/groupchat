@@ -44,7 +44,7 @@ class UserProfile(ndb.Model):
 
     def to_list_output(self):
         return ProfileForm(
-            displayname = self.displayname,
+            username = self.username,
             userid = self.userid,
             avatar = self.avatar
         )
@@ -58,13 +58,14 @@ class UserProfile(ndb.Model):
 
     def to_public_output(self):
         return ProfileForm(
+            username = self.username,
             displayname = self.displayname,
             userid = self.userid,
             avatar = self.avatar,
             blurb =
             self.blurb,
-            chatsmember = self.chatsmember,
-            chatsfollower = self.chatsfollower,
+            chatsmember = list(map(lambda x: x.id(), self.chatsmember)),
+            chatsfollower = list(map(lambda x: x.id(), self.chatsfollower))
         )
 
 # Credential object contains hashed user password, user API token, salt
@@ -138,7 +139,7 @@ class GroupChat(ndb.Model):
     def to_private_output(self):
         return GroupChatInfoForm(
             name = self.name,
-            members = map(lambda x: UserProfile.get_by_id(x.id()).to_list_output(), self.members),
+            members = list(map(lambda x: UserProfile.get_by_id(x.id()), self.members)),
             messagelist = self.messagelist
         )
 
